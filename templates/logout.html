@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{.PageTitle}}</title>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <p>Test</p>
+    <div class="container">
+        <h1>{{.LogoutTitle}}</h1>
+        <p>{{.Subject}}</p>
+        <form action={{printf "/logout?logout_challenge=%s" .Challenge}} method="POST">
+            <input type="hidden" name="challenge" value={{.Challenge}}>
+            <input type="hidden" name="accept" value="true">
+            <button type="submit" class="btn btn-success">{{.LogoutButtonLabel}}</button>
+        </form>
+        <form action={{printf "/logout?logout_challenge=%s" .Challenge}} method="POST">
+            <input type="hidden" name="challenge" value={{.Challenge}}>
+            <button type="submit" class="btn btn-warning">{{.LogoutDenyLabel}}</button>
+        </form>
+
+    </div>
+</body>
+
+</html>

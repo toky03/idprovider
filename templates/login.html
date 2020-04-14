@@ -12,7 +12,7 @@
 <body>
     <div class="container">
         <h1>{{.LoginLabel}}</h1>
-        <form action="/authorize" method="POST">
+        <form action={{printf "/login?login_challenge=%s" .Challenge}} method="POST">
             <div class="form-group">
                 <label for="username">{{.UserNameLabel}}</label>
                 <input type="text" class="form-control" name="username" placeholder="Bitte geben Sie ihren Benutzernamen ein">
@@ -21,9 +21,11 @@
                 <label for="password">{{.PasswordLabel}}</label>
                 <input type="password" class="form-control" name="password" placeholder="Geben Sie ihr Passwort ein">
             </div>
+            <div class="text-danger">{{.ErrorMessage}}</div>
             <input type="hidden" name="challenge" value={{.Challenge}}>
             <button type="submit" class="btn btn-success">{{.LoginButtonLabel}}</button>
         </form>
+
     </div>
 </body>
 

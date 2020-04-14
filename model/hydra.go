@@ -7,6 +7,7 @@ type LoginChallenge struct {
 	RequestURL           string                 `json:"request_url"`
 	RequestedScope       []string               `json:"requested_scope"`
 	RequestedAccessToken []string               `json:"requested_access_token_audience"`
+	RpInitiated          bool                   `json:"rp_initiated"`
 	X                    map[string]interface{} `json:"-"`
 }
 
