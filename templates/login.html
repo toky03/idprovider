@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{.PageTitle}}</title>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>{{.LoginLabel}}</h1>
+        <form action="/authorize" method="POST">
+            <div class="form-group">
+                <label for="username">{{.UserNameLabel}}</label>
+                <input type="text" class="form-control" name="username" placeholder="Bitte geben Sie ihren Benutzernamen ein">
+            </div>
+            <div class="form-group">
+                <label for="password">{{.PasswordLabel}}</label>
+                <input type="password" class="form-control" name="password" placeholder="Geben Sie ihr Passwort ein">
+            </div>
+            <input type="hidden" name="challenge" value={{.Challenge}}>
+            <button type="submit" class="btn btn-success">{{.LoginButtonLabel}}</button>
+        </form>
+    </div>
+</body>
+
+</html>

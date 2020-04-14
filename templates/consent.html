@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{{.PageTitle}}</title>
+    <link
+      rel="stylesheet"
+      href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+    />
+    <script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="jumbotron">
+        <form action="/acceptConsent" method="POST">
+          <h1>{{.AuthorizeTitle}}</h1>
+          <p>{{.RequestMessage}}</p>
+          <fieldset>
+              {{range .ReqestScopes}}
+              
+              <div class="checkbox">
+                <label>
+                    <input type="checkbox" name="scope" value={{.ScopeValue}}>
+                    {{.ScopeName}}
+                  </label>
+                </div>
+              {{end}}
+        </fieldset>
+
+        <input type="hidden" name="challenge" value={{.Challenge}}>
+        {{if .GrantedAccessToken }}
+        <p>{{.GrantedAccessLabel}}</p>
+        {{end}}
+        <fieldset>
+          {{range .GrantedAccessToken}}
+          <div class="checkbox">
+            <label>
+                <input readonly="true" type="checkbox" name="accesToken" value={{.ScopeValue}}>
+                {{.ScopeName}}
+              </label>
+            </div>
+            {{end}}
+        </fieldset>
+
+          <p>
+            <button
+              type="submit"
+              class="btn btn-primary btn-lg"
+              style="width:200px;"
+            >
+              {{.AuthorizeButtonLabel}}
+            </button>
+          </p>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
