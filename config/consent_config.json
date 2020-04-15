@@ -1,0 +1,7 @@
+{
+  "PageTitle": "Auth",
+  "RequestMessage": "Die Seite %s fordert die Folgenden Berechtigungen an",
+  "AuthorizeButtonLabel": "Authorisieren",
+  "AuthorizeTitle": "Authorisierung",
+  "GrantedAccessLabel": "Die Folgenden Authorisierungen sind für diesen Client Erlaubt"
+}
