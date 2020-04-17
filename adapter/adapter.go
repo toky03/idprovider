@@ -11,24 +11,24 @@ import (
 	"user-service/model"
 )
 
-type Adapter struct {
+type HydraAdapter struct {
 	hydraEndpoint string
 }
 
-// NewAdapter creates new Instance of Adapter Service
-func NewAdapter() Adapter {
+// NewHydraAdapter creates new Instance of Adapter Service
+func NewHydraAdapter() HydraAdapter {
 	hydraEndpoint := os.Getenv("HYDRA_BASE_URL")
 	if hydraEndpoint == "" {
 		hydraEndpoint = "http://127.0.0.1:4445"
 	}
-	return Adapter{
+	return HydraAdapter{
 		hydraEndpoint: hydraEndpoint,
 	}
 
 }
 
 // ReadChallenge fetch data from Challgnge
-func (a *Adapter) ReadChallenge(loginChallenge, challengeMethod string) (challengeBody model.LoginChallenge, err error) {
+func (a *HydraAdapter) ReadChallenge(loginChallenge, challengeMethod string) (challengeBody model.LoginChallenge, err error) {
 	headers := map[string][]string{
 		"Accept": []string{"application/json"},
 	}
@@ -59,7 +59,7 @@ func (a *Adapter) ReadChallenge(loginChallenge, challengeMethod string) (challen
 }
 
 // SendRejectBody used to reqject requests for login, logout or consent
-func (a *Adapter) SendRejectBody(method, challenge string, rawJson []byte) (redirectUrl string, err error) {
+func (a *HydraAdapter) SendRejectBody(method, challenge string, rawJson []byte) (redirectUrl string, err error) {
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/oauth2/auth/requests/%s/reject?%s_challenge=%s", a.hydraEndpoint, method, method, challenge), bytes.NewBuffer(rawJson))
 	if err != nil {
 		log.Println(err)
@@ -68,7 +68,7 @@ func (a *Adapter) SendRejectBody(method, challenge string, rawJson []byte) (redi
 }
 
 // SendAcceptBody used to accept requests
-func (a *Adapter) SendAcceptBody(method, challenge string, rawJson []byte) (redirectUrl string, err error) {
+func (a *HydraAdapter) SendAcceptBody(method, challenge string, rawJson []byte) (redirectUrl string, err error) {
 	headers := map[string][]string{
 		"Accept":       []string{"application/json"},
 		"Content-Type": []string{"application/json"},
@@ -106,7 +106,7 @@ func sendRequest(req *http.Request) (redirectUrl string, err error) {
 
 }
 
-func (a *Adapter) RedirectFromConsent(allowedScopes, allowedAccessToken []string, consentChallenge string) (redirectUrl string, err error) {
+func (a *HydraAdapter) RedirectFromConsent(allowedScopes, allowedAccessToken []string, consentChallenge string) (redirectUrl string, err error) {
 	scope := make([]string, 0, len(allowedScopes))
 	for _, allowedScope := range allowedScopes {
 		scope = append(scope, string(allowedScope))
@@ -126,11 +126,13 @@ func (a *Adapter) RedirectFromConsent(allowedScopes, allowedAccessToken []string
 			AccessToken: map[string]string{
 				"email":    "marco.jakob3@gmail.com",
 				"userName": "Toky",
+				"roles":    "[\"Subscriber\"]",
 			},
 			IDToken: map[string]string{
 				"username": "Marco",
 				"lastname": "Jakob",
 				"email":    "marco.jakob3@gmail.com",
+				"roles":    "[\"Subscriber\"]",
 			},
 		},
 	}

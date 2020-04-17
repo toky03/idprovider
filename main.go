@@ -8,12 +8,15 @@ import (
 
 func main() {
 
-	handler := manager.NewServieHandler()
+	loginHandler := manager.NewLoginHandler()
+	userHandler := manager.NewUserHandler()
 
-	http.HandleFunc("/login", handler.LoginHandler)
-	http.HandleFunc("/consent", handler.ConsentHandler)
-	http.HandleFunc("/acceptConsent", handler.AcceptConsentHandler)
-	http.HandleFunc("/logout", handler.LogoutHandler)
+	http.HandleFunc("/login", loginHandler.LoginHandler)
+	http.HandleFunc("/consent", loginHandler.ConsentHandler)
+	http.HandleFunc("/acceptConsent", loginHandler.AcceptConsentHandler)
+	http.HandleFunc("/logout", loginHandler.LogoutHandler)
+	http.HandleFunc("/user", userHandler.ManageUser)
+	http.HandleFunc("/user/", userHandler.ManageUser)
 
 	log.Println("Server is running at 3000 port.")
 	http.ListenAndServe(":3000", nil)

@@ -8,7 +8,7 @@ import (
 )
 
 // Service Handler for Config and Services
-type Service struct {
+type LoginService struct {
 	LoginData       model.LoginPageData
 	LogoutData      model.LogoutPage
 	ConsentData     model.ConsentData
@@ -16,7 +16,7 @@ type Service struct {
 }
 
 // NewService creates new instance of a Service
-func NewService() (manager Service, err error) {
+func NewLoginService() (manager LoginService, err error) {
 	pwd, _ := os.Getwd()
 	var loginPageData model.LoginPageData
 	loginFile, err := os.Open(pwd + "/config/login_config.json")
@@ -38,7 +38,7 @@ func NewService() (manager Service, err error) {
 	decoder = json.NewDecoder(acceptLoginFile)
 	err = decoder.Decode(&acceptLoginData)
 
-	manager = Service{
+	manager = LoginService{
 		LoginData:       loginPageData,
 		LogoutData:      logoutPageData,
 		ConsentData:     consentPageData,
@@ -48,7 +48,7 @@ func NewService() (manager Service, err error) {
 }
 
 // FetchLoginConfig returns prepared Login Page Data
-func (s *Service) FetchLoginConfig(challenge string, withError bool) (loginPageData model.LoginPageData) {
+func (s *LoginService) FetchLoginConfig(challenge string, withError bool) (loginPageData model.LoginPageData) {
 
 	loginPageData = s.LoginData
 	loginPageData.Challenge = challenge
@@ -60,7 +60,7 @@ func (s *Service) FetchLoginConfig(challenge string, withError bool) (loginPageD
 }
 
 // FetchLogoutConfig returns prepared Logout Page Data
-func (s *Service) FetchLogoutConfig(challenge, subject string) (logoutPageData model.LogoutPage) {
+func (s *LoginService) FetchLogoutConfig(challenge, subject string) (logoutPageData model.LogoutPage) {
 	logoutPageData = s.LogoutData
 	logoutPageData.Challenge = challenge
 	logoutPageData.Subject = subject
@@ -68,7 +68,7 @@ func (s *Service) FetchLogoutConfig(challenge, subject string) (logoutPageData m
 }
 
 // FetchConsentConfig returns prepared Consent Page Data
-func (s *Service) FetchConsentConfig(clientID, challenge string, requestedScopes, grantedAccesToken []model.ReqestScope) (consentPageData model.ConsentData) {
+func (s *LoginService) FetchConsentConfig(clientID, challenge string, requestedScopes, grantedAccesToken []model.ReqestScope) (consentPageData model.ConsentData) {
 	consentPageData = s.ConsentData
 	consentPageData.RequestMessage = fmt.Sprintf(s.ConsentData.RequestMessage, clientID)
 	consentPageData.Challenge = challenge
@@ -79,7 +79,7 @@ func (s *Service) FetchConsentConfig(clientID, challenge string, requestedScopes
 }
 
 // FetchAcceptLoginConfig returns prepared Accept Login Data
-func (s *Service) FetchAcceptLoginConfig(userName string) (acceptLoginData model.AcceptLogin) {
+func (s *LoginService) FetchAcceptLoginConfig(userName string) (acceptLoginData model.AcceptLogin) {
 	acceptLoginData = s.AcceptLoginData
 	acceptLoginData.Subject = userName
 	return

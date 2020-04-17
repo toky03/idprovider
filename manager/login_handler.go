@@ -11,20 +11,20 @@ import (
 )
 
 type Handler struct {
-	Service Service
-	Adapter adapter.Adapter
+	LoginService LoginService
+	Adapter      adapter.HydraAdapter
 }
 
-func NewServieHandler() Handler {
-	service, err := NewService()
+func NewLoginHandler() Handler {
+	service, err := NewLoginService()
 	if err != nil {
 		log.Fatal(err)
 	}
-	adapter := adapter.NewAdapter()
+	adapter := adapter.NewHydraAdapter()
 
 	return Handler{
-		Service: service,
-		Adapter: adapter,
+		LoginService: service,
+		Adapter:      adapter,
 	}
 
 }
@@ -59,7 +59,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 		if userName == "toky" && password == "pwd" {
 
-			acceptLoginBody := h.Service.FetchAcceptLoginConfig(userName)
+			acceptLoginBody := h.LoginService.FetchAcceptLoginConfig(userName)
 			rawJson, err := json.Marshal(acceptLoginBody)
 
 			redirectURL, err := h.Adapter.SendAcceptBody("login", loginChallenge, rawJson)
@@ -72,7 +72,7 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusForbidden)
 		templLogin := template.Must(template.ParseFiles("templates/login.html"))
-		loginData := h.Service.FetchLoginConfig(challenge, true)
+		loginData := h.LoginService.FetchLoginConfig(challenge, true)
 		templLogin.Execute(w, loginData)
 	} else {
 		challengeBody, err := h.Adapter.ReadChallenge(challenge, "login")
@@ -84,11 +84,11 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 		if !challengeBody.Skip {
 			templLogin := template.Must(template.ParseFiles("templates/login.html"))
-			loginData := h.Service.FetchLoginConfig(challenge, false)
+			loginData := h.LoginService.FetchLoginConfig(challenge, false)
 			templLogin.Execute(w, loginData)
 		} else {
 
-			acceptLoginBody := h.Service.FetchAcceptLoginConfig(challengeBody.Subject)
+			acceptLoginBody := h.LoginService.FetchAcceptLoginConfig(challengeBody.Subject)
 			rawJson, err := json.Marshal(acceptLoginBody)
 
 			redirectURL, err := h.Adapter.SendAcceptBody("login", challenge, rawJson)
@@ -145,7 +145,7 @@ func (h *Handler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 		if challengeBody.RpInitiated {
 			templLogout := template.Must(template.ParseFiles("templates/logout.html"))
-			logoutData := h.Service.FetchLogoutConfig(challenge, challengeBody.Subject)
+			logoutData := h.LoginService.FetchLogoutConfig(challenge, challengeBody.Subject)
 			templLogout.Execute(w, logoutData)
 		} else {
 			redirectURL, err := h.Adapter.SendAcceptBody("logout", challenge, nil)
@@ -187,7 +187,7 @@ func (h *Handler) ConsentHandler(w http.ResponseWriter, r *http.Request) {
 		grantedAccesToken = append(grantedAccesToken, model.ReqestScope{ScopeName: accessToken, ScopeValue: "true"}) // hier könnten die tokens gefiltert werden
 	}
 	if !challengeBody.Skip {
-		consentData := h.Service.FetchConsentConfig(challengeBody.Client.ClientID, challenge, requestedScopes, grantedAccesToken)
+		consentData := h.LoginService.FetchConsentConfig(challengeBody.Client.ClientID, challenge, requestedScopes, grantedAccesToken)
 		templConsent := template.Must(template.ParseFiles("templates/consent.html"))
 
 		templConsent.Execute(w, consentData)
