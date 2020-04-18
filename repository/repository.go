@@ -51,22 +51,19 @@ func NewDatabaseHandler() (DatabaseRepository, error) {
 
 func (repository *DatabaseRepository) FindByUserName(userName string) (model.User, error) {
 	var person model.User
-	err := repository.connection.Where("user_name = ?", userName).Preload("Applications").First(&person).Error
+	err := repository.connection.Where("user_name = ?", userName).Set("gorm:auto_preload", true).First(&person).Error
 	return person, err
 }
 
 func (repository *DatabaseRepository) FindByEmail(email string) (model.User, error) {
 	var person model.User
-	err := repository.connection.Where("email = ?", email).Preload("Applications").First(&person).Error
+	err := repository.connection.Where("email = ?", email).Set("gorm:auto_preload", true).First(&person).Error
 	return person, err
 }
 
 func (repository *DatabaseRepository) FindByID(id uint) (model.User, error) {
 	var person model.User
-	var applications []model.Application
-	err := repository.connection.Where("id = ?", id).First(&person).Error
-	err = repository.connection.Model(&person).Related(&applications).Error
-	person.Applications = applications
+	err := repository.connection.Where("id = ?", id).Set("gorm:auto_preload", true).First(&person).Error
 	return person, err
 }
 
@@ -74,7 +71,7 @@ func (repository *DatabaseRepository) FindByID(id uint) (model.User, error) {
 func (repository *DatabaseRepository) FindAllUsers() ([]model.User, error) {
 	var persons []model.User
 
-	repository.connection.Find(&persons).Preload("Applications")
+	repository.connection.Set("gorm:auto_preload", true).Find(&persons)
 	return persons, nil
 
 }
@@ -87,7 +84,7 @@ func (repository *DatabaseRepository) CreateUser(user model.User) (err error) {
 
 // UpdateUser persists user
 func (repository *DatabaseRepository) UpdateUser(user *model.User) (err error) {
-
+	err = repository.connection.Model(user).Association("Applications").Replace(user.Applications).Error
 	err = repository.connection.Save(user).Error
 	return
 }
@@ -106,6 +103,17 @@ func (repository *DatabaseRepository) FindByEmailOrUserName(userName string) (mo
 	}
 
 	return user, nil
+
+}
+
+func (repository *DatabaseRepository) FindUsersFromApplication(applicationName string) ([]model.User, error) {
+	var users []model.User
+
+	err := repository.connection.Set("gorm:auto_preload", true).Joins("JOIN applications ON users.id = applications.user_id AND applications.application_name = ?", applicationName).Find(&users).Error
+	if gorm.IsRecordNotFoundError(err) {
+		return users, nil
+	}
+	return users, err
 
 }
 

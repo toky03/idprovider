@@ -17,6 +17,7 @@ func main() {
 	http.HandleFunc("/logout", loginHandler.LogoutHandler)
 	http.HandleFunc("/user", userHandler.ManageUser)
 	http.HandleFunc("/user/", userHandler.ManageUser)
+	http.HandleFunc("/user/application/", userHandler.ManageApplications)
 
 	log.Println("Server is running at 3000 port.")
 	http.ListenAndServe(":3000", nil)

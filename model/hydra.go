@@ -31,10 +31,17 @@ type AcceptConsent struct {
 }
 
 type SessionInfo struct {
-	AccessToken map[string]string `json:"access_token"`
-	IDToken     map[string]string `json:"id_token"`
+	AccessToken UserInfoToken `json:"access_token"`
+	IDToken     UserInfoToken `json:"id_token"`
 }
 
 type Redirect struct {
 	RedirectURL string `json:"redirect_to"`
+}
+
+type UserInfoToken struct {
+	UserName string   `json:"username"`
+	LastName string   `json:"lastname"`
+	EMail    string   `json:"email"`
+	Roles    []string `json:"roles"`
 }

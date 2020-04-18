@@ -55,7 +55,31 @@ func (s *UserService) FindUser(userID uint) (model.UserDTO, error) {
 	return mapUserToDTO(user), nil
 }
 
+func (s *UserService) FindUserByEmailOrUserName(userName string) (model.UserDTO, error) {
+	user, err := s.databaseHandler.FindByEmailOrUserName(userName)
+	if err != nil {
+		log.Println(err)
+		if gorm.IsRecordNotFoundError(err) {
+			return model.UserDTO{}, errors.New("No user found with this username")
+		}
+		return model.UserDTO{}, err
+	}
+	return mapUserToDTO(user), nil
+
+}
+
 func (s *UserService) FindUsersFromApplication(applicationName string) ([]model.UserDTO, error) {
+
+	users, err := s.databaseHandler.FindUsersFromApplication(applicationName)
+	userDTOs := make([]model.UserDTO, 0, len(users))
+
+	for _, user := range users {
+
+		userDTOs = append(userDTOs, mapUserToDTO(user))
+
+	}
+
+	return userDTOs, err
 	return []model.UserDTO{}, nil
 }
 
@@ -83,8 +107,8 @@ func (s *UserService) CreateUser(userDTO model.UserDTO) (err error) {
 		return errors.New("Cannot create a user with existing Id")
 	}
 
-	if (userDTO.UserName == "" && userDTO.Email == "") || userDTO.Password == "" {
-		return errors.New("A user must have minimum username or email and a Password")
+	if userDTO.UserName == "" || userDTO.Email == "" || userDTO.Password == "" {
+		return errors.New("A user must have minimum username, email and a Password")
 	}
 
 	bcryptedPassword, err := bcrypt.GenerateFromPassword([]byte(userDTO.Password), bcrypt.DefaultCost)
@@ -116,6 +140,7 @@ func (s *UserService) CreateUser(userDTO model.UserDTO) (err error) {
 	return
 }
 
+// UpdateUser by userID
 func (s *UserService) UpdateUser(userID uint, userDTO model.UserDTO) error {
 	user, err := s.databaseHandler.FindByID(userID)
 	if err != nil {
@@ -131,9 +156,12 @@ func (s *UserService) UpdateUser(userID uint, userDTO model.UserDTO) error {
 			user.UserName = userDTO.UserName
 		}
 	}
-	if userDTO.Email != "" {
-		if userDTO.Email == "-" {
-			user.Email = ""
+	if userDTO.Email == "-" {
+		return errors.New("Email cannot be deleted")
+	}
+	if userDTO.Email != "" && userDTO.Email != user.Email {
+		if _, err := s.databaseHandler.FindByEmail(userDTO.Email); !gorm.IsRecordNotFoundError(err) {
+			return errors.New("Email cannot be changed as there is alreay a user with this e-mail")
 		} else {
 			user.Email = userDTO.Email
 		}

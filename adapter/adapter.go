@@ -105,39 +105,3 @@ func sendRequest(req *http.Request) (redirectUrl string, err error) {
 	return
 
 }
-
-func (a *HydraAdapter) RedirectFromConsent(allowedScopes, allowedAccessToken []string, consentChallenge string) (redirectUrl string, err error) {
-	scope := make([]string, 0, len(allowedScopes))
-	for _, allowedScope := range allowedScopes {
-		scope = append(scope, string(allowedScope))
-	}
-	accesToken := make([]string, 0, len(allowedAccessToken))
-	for _, allowedToken := range allowedAccessToken {
-		accesToken = append(accesToken, string(allowedToken))
-	}
-
-	acceptConsentBody := model.AcceptConsent{
-		GrantScope:               scope,
-		GrantAccessTokenAudience: accesToken,
-		Remember:                 true,
-		RememberFor:              0,
-		Session: model.SessionInfo{
-			//TODO Example data
-			AccessToken: map[string]string{
-				"email":    "marco.jakob3@gmail.com",
-				"userName": "Toky",
-				"roles":    "[\"Subscriber\"]",
-			},
-			IDToken: map[string]string{
-				"username": "Marco",
-				"lastname": "Jakob",
-				"email":    "marco.jakob3@gmail.com",
-				"roles":    "[\"Subscriber\"]",
-			},
-		},
-	}
-
-	rawJson, err := json.Marshal(acceptConsentBody)
-
-	return a.SendAcceptBody("consent", consentChallenge, rawJson)
-}

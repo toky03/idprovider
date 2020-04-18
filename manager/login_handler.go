@@ -6,25 +6,24 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"user-service/adapter"
 	"user-service/model"
 )
 
 type Handler struct {
-	LoginService LoginService
-	Adapter      adapter.HydraAdapter
+	LoginService  LoginService
+	ConfigService ConfigService
 }
 
 func NewLoginHandler() Handler {
-	service, err := NewLoginService()
+	configService, err := NewConfigService()
 	if err != nil {
 		log.Fatal(err)
 	}
-	adapter := adapter.NewHydraAdapter()
+	loginService := NewLoginService()
 
 	return Handler{
-		LoginService: service,
-		Adapter:      adapter,
+		ConfigService: configService,
+		LoginService:  loginService,
 	}
 
 }
@@ -56,13 +55,17 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		userName := r.Form.Get("username")
 		password := r.Form.Get("password")
 		loginChallenge := r.Form.Get("challenge")
+		pass, err := h.LoginService.CheckPasswords(userName, password)
+		if err != nil {
+			log.Println(err)
+		}
 
-		if userName == "toky" && password == "pwd" {
+		if pass {
 
-			acceptLoginBody := h.LoginService.FetchAcceptLoginConfig(userName)
+			acceptLoginBody := h.ConfigService.FetchAcceptLoginConfig(userName)
 			rawJson, err := json.Marshal(acceptLoginBody)
 
-			redirectURL, err := h.Adapter.SendAcceptBody("login", loginChallenge, rawJson)
+			redirectURL, err := h.LoginService.SendAcceptBody("login", loginChallenge, rawJson)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				log.Fatal(err)
@@ -72,10 +75,10 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusForbidden)
 		templLogin := template.Must(template.ParseFiles("templates/login.html"))
-		loginData := h.LoginService.FetchLoginConfig(challenge, true)
+		loginData := h.ConfigService.FetchLoginConfig(challenge, true)
 		templLogin.Execute(w, loginData)
 	} else {
-		challengeBody, err := h.Adapter.ReadChallenge(challenge, "login")
+		challengeBody, err := h.LoginService.ReadChallenge(challenge, "login")
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -84,14 +87,14 @@ func (h *Handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 		if !challengeBody.Skip {
 			templLogin := template.Must(template.ParseFiles("templates/login.html"))
-			loginData := h.LoginService.FetchLoginConfig(challenge, false)
+			loginData := h.ConfigService.FetchLoginConfig(challenge, false)
 			templLogin.Execute(w, loginData)
 		} else {
 
-			acceptLoginBody := h.LoginService.FetchAcceptLoginConfig(challengeBody.Subject)
+			acceptLoginBody := h.ConfigService.FetchAcceptLoginConfig(challengeBody.Subject)
 			rawJson, err := json.Marshal(acceptLoginBody)
 
-			redirectURL, err := h.Adapter.SendAcceptBody("login", challenge, rawJson)
+			redirectURL, err := h.LoginService.SendAcceptBody("login", challenge, rawJson)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				log.Fatal(err)
@@ -125,10 +128,10 @@ func (h *Handler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		var redirectURL string
 
 		if accept == "true" {
-			redirectURL, err = h.Adapter.SendAcceptBody("logout", logoutChallenge, nil)
+			redirectURL, err = h.LoginService.SendAcceptBody("logout", logoutChallenge, nil)
 
 		} else {
-			redirectURL, err = h.Adapter.SendRejectBody("logout", logoutChallenge, nil)
+			redirectURL, err = h.LoginService.SendRejectBody("logout", logoutChallenge, nil)
 		}
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -138,17 +141,17 @@ func (h *Handler) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, redirectURL, http.StatusFound)
 	} else {
 
-		challengeBody, err := h.Adapter.ReadChallenge(challenge, "logout")
+		challengeBody, err := h.LoginService.ReadChallenge(challenge, "logout")
 		if err != nil {
 			log.Println(err)
 		}
 
 		if challengeBody.RpInitiated {
 			templLogout := template.Must(template.ParseFiles("templates/logout.html"))
-			logoutData := h.LoginService.FetchLogoutConfig(challenge, challengeBody.Subject)
+			logoutData := h.ConfigService.FetchLogoutConfig(challenge, challengeBody.Subject)
 			templLogout.Execute(w, logoutData)
 		} else {
-			redirectURL, err := h.Adapter.SendAcceptBody("logout", challenge, nil)
+			redirectURL, err := h.LoginService.SendAcceptBody("logout", challenge, nil)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				log.Fatal(err)
@@ -169,7 +172,7 @@ func (h *Handler) ConsentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	challengeBody, err := h.Adapter.ReadChallenge(challenge, "consent")
+	challengeBody, err := h.LoginService.ReadChallenge(challenge, "consent")
 
 	if err != nil {
 		log.Println(err)
@@ -187,13 +190,13 @@ func (h *Handler) ConsentHandler(w http.ResponseWriter, r *http.Request) {
 		grantedAccesToken = append(grantedAccesToken, model.ReqestScope{ScopeName: accessToken, ScopeValue: "true"}) // hier könnten die tokens gefiltert werden
 	}
 	if !challengeBody.Skip {
-		consentData := h.LoginService.FetchConsentConfig(challengeBody.Client.ClientID, challenge, requestedScopes, grantedAccesToken)
+		consentData := h.ConfigService.FetchConsentConfig(challengeBody.Client.ClientID, challenge, challengeBody.Subject, requestedScopes, grantedAccesToken)
 		templConsent := template.Must(template.ParseFiles("templates/consent.html"))
 
 		templConsent.Execute(w, consentData)
 	} else {
 
-		redirectURL, err := h.Adapter.RedirectFromConsent(challengeBody.RequestedScope, challengeBody.RequestedAccessToken, challenge)
+		redirectURL, err := h.LoginService.RedirectFromConsent(challengeBody.RequestedScope, challengeBody.RequestedAccessToken, challenge, challengeBody.Subject, challengeBody.Client.ClientID)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -218,7 +221,9 @@ func (h *Handler) AcceptConsentHandler(w http.ResponseWriter, r *http.Request) {
 		allowedScopes := r.PostForm["scope"]
 		allowedAccessToken := r.PostForm["accesToken"]
 		consentChallenge := r.Form.Get("challenge")
-		redirectURL, err := h.Adapter.RedirectFromConsent(allowedScopes, allowedAccessToken, consentChallenge)
+		userName := r.Form.Get("userName")
+		clientName := r.Form.Get("clientName")
+		redirectURL, err := h.LoginService.RedirectFromConsent(allowedScopes, allowedAccessToken, consentChallenge, userName, clientName)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

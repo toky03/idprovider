@@ -1,4 +1,4 @@
 {
-  "Remember": true,
-  "RememberFor": 20
+  "Remember": false,
+  "RememberFor": 0
 }

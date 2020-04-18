@@ -10,15 +10,17 @@ import (
 )
 
 type UserHandler struct {
-	UserPath    string
-	userService UserService
+	UserPath         string
+	ApplicationsPath string
+	userService      UserService
 }
 
 func NewUserHandler() UserHandler {
 
 	return UserHandler{
-		UserPath:    "/user/",
-		userService: NewUserService(),
+		UserPath:         "/user/",
+		ApplicationsPath: "/user/application/",
+		userService:      NewUserService(),
 	}
 
 }
@@ -69,7 +71,11 @@ func (h *UserHandler) ManageUser(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("Not allowed to set Password with this Method"))
 		}
 
-		h.userService.UpdateUser(uint(userID), userDTO)
+		err = h.userService.UpdateUser(uint(userID), userDTO)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+		}
 
 	}
 	if r.Method == "GET" {
@@ -95,6 +101,31 @@ func (h *UserHandler) ManageUser(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(users)
 	}
 
+}
+
+func (h *UserHandler) ManageApplications(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+
+		path := html.EscapeString(r.URL.Path)
+		applicationName := strings.ReplaceAll(path, h.ApplicationsPath, "")
+		if applicationName != "" {
+			user, err := h.userService.FindUsersFromApplication(applicationName)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(user)
+			return
+		} else {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("application Name must be specified"))
+		}
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Method must be GET"))
+
+	}
 }
 
 func (h *UserHandler) createUser(userDTO model.UserDTO) error {

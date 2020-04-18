@@ -30,6 +30,8 @@
         </fieldset>
 
         <input type="hidden" name="challenge" value={{.Challenge}}>
+        <input type="hidden" name="userName" value={{.UserName}}>
+        <input type="hidden" name="clientName" value={{.ClientName}}>
         {{if .GrantedAccessToken }}
         <p>{{.GrantedAccessLabel}}</p>
         {{end}}

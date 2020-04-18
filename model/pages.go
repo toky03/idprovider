@@ -11,6 +11,8 @@ type LoginPageData struct {
 }
 
 type ConsentData struct {
+	UserName             string
+	ClientName           string
 	PageTitle            string
 	AuthorizeTitle       string
 	RequestMessage       string
