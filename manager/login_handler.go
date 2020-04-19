@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+
 	"user-service/model"
 )
 
@@ -17,6 +18,7 @@ type Handler struct {
 func NewLoginHandler() Handler {
 	configService, err := NewConfigService()
 	if err != nil {
+		log.Print("Could not create config")
 		log.Fatal(err)
 	}
 	loginService := NewLoginService()

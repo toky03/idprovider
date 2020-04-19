@@ -18,6 +18,7 @@ type UserService struct {
 func NewUserService() UserService {
 	databaseHandler, err := repository.NewDatabaseHandler()
 	if err != nil {
+		log.Println("could not create new Service due to database initialization")
 		log.Fatal(err)
 	}
 

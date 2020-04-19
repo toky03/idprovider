@@ -3,6 +3,7 @@ package manager
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"user-service/model"
 )
@@ -17,26 +18,52 @@ type ConfigService struct {
 
 // NewService creates new instance of a Service
 func NewConfigService() (manager ConfigService, err error) {
-	pwd, _ := os.Getwd()
+	pwd, err := os.Getwd()
+	if pwd == "/" {
+		pwd = ""
+	}
 	var loginPageData model.LoginPageData
 	loginFile, err := os.Open(pwd + "/config/login_config.json")
+	if err != nil {
+		log.Println(err)
+	}
 	decoder := json.NewDecoder(loginFile)
 	err = decoder.Decode(&loginPageData)
-
+	if err != nil {
+		log.Println(err)
+	}
 	var logoutPageData model.LogoutPage
 	logoutfile, err := os.Open(pwd + "/config/logout_config.json")
+	if err != nil {
+		log.Println(err)
+	}
 	decoder = json.NewDecoder(logoutfile)
 	err = decoder.Decode(&logoutPageData)
+	if err != nil {
+		log.Println(err)
+	}
 
 	var consentPageData model.ConsentData
 	consentFile, err := os.Open(pwd + "/config/consent_config.json")
+	if err != nil {
+		log.Println(err)
+	}
 	decoder = json.NewDecoder(consentFile)
 	err = decoder.Decode(&consentPageData)
+	if err != nil {
+		log.Println(err)
+	}
 
 	var acceptLoginData model.AcceptLogin
 	acceptLoginFile, err := os.Open(pwd + "/config/accept_login_config.json")
+	if err != nil {
+		log.Println(err)
+	}
 	decoder = json.NewDecoder(acceptLoginFile)
 	err = decoder.Decode(&acceptLoginData)
+	if err != nil {
+		log.Println(err)
+	}
 
 	manager = ConfigService{
 		LoginData:       loginPageData,

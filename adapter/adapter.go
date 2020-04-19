@@ -17,7 +17,7 @@ type HydraAdapter struct {
 
 // NewHydraAdapter creates new Instance of Adapter Service
 func NewHydraAdapter() HydraAdapter {
-	hydraEndpoint := os.Getenv("HYDRA_BASE_URL")
+	hydraEndpoint := os.Getenv("HYDRA_URL")
 	if hydraEndpoint == "" {
 		hydraEndpoint = "http://127.0.0.1:4445"
 	}

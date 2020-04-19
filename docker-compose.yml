@@ -1,0 +1,69 @@
+version: '3'
+
+services:
+  id-database:
+    image: postgres:9.6
+    ports:
+      - "5454:5432"
+    environment: 
+      - POSTGRES_DB=usermgmt
+      - POSTGRES_PASSWORD=pwd
+      - POSTGRES_USER=tokyuser
+  id-server:
+    depends_on: 
+      - hydra
+      - id-database
+    image: toky03/idserver:0.1
+    ports:
+      - "3000:3000"
+    environment: 
+      - HYDRA_URL=http://hydra:4445
+      - DB_NAME=usermgmt
+      - DB_PASS=pwd
+      - DB_USER=tokyuser
+      - DB_TYPE=postgres
+      - DB_HOST=id-database
+      - DB_PORT=5432
+      
+  hydra-migrate:
+    image: oryd/hydra:latest
+    environment:
+      - DSN=postgres://hydra:secret@postgresd:5432/hydra?sslmode=disable&max_conns=20&max_idle_conns=4
+    command:
+      migrate sql -e --yes
+    restart: on-failure
+   
+  hydra:
+    image: oryd/hydra:latest
+    ports:
+      - "4444:4444" # Public port
+      - "4445:4445" # Admin port
+      - "5555:5555" # Port for hydra token user
+    command:
+      serve all --dangerous-force-http
+    environment:
+      - URLS_SELF_ISSUER=http://127.0.0.1:4444
+      - URLS_CONSENT=http://127.0.0.1:3000/consent
+      - URLS_LOGIN=http://127.0.0.1:3000/login
+      - URLS_LOGOUT=http://127.0.0.1:3000/logout
+      - DSN=postgres://hydra:secret@postgresd:5432/hydra?sslmode=disable&max_conns=20&max_idle_conns=4
+      - SECRETS_SYSTEM=youReallyNeedToChangeThis
+      - OIDC_SUBJECT_IDENTIFIERS_SUPPORTED_TYPES=public,pairwise
+      - OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT=youReallyNeedToChangeThis
+      - SERVE_PUBLIC_CORS_ALLOWED_ORIGINS=*
+      - SERVE_PUBLIC_CORS_ENABLED=true
+      - SERVE_PUBLIC_CORS_ALLOWED_METHODS=POST,GET,PUT,DELETE
+      - SERVE_ADMIN_CORS_ENABLED=true
+      - SERVE_ADMIN_CORS_ALLOWED_METHODS=POST,GET,PUT,DELETE
+    restart: unless-stopped
+    depends_on:
+      - hydra-migrate   
+    
+  postgresd:
+    image: postgres:9.6
+    ports:
+      - "5455:5432"
+    environment:
+      - POSTGRES_USER=hydra
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=hydra
