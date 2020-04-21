@@ -6,13 +6,25 @@ import (
 	"user-service/model"
 	"user-service/repository"
 
-	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 )
 
+type DatabaseHandler interface {
+	FindByUserName(string) (model.User, error)
+	FindByID(uint) (model.User, error)
+	FindByEmail(string) (model.User, error)
+	FindAllUsers() ([]model.User, error)
+	CreateUser(model.User) (err error)
+	UpdateUser(*model.User) error
+	FindByEmailOrUserName(string) (model.User, error)
+	FindUsersFromApplication(string) ([]model.User, error)
+	IsNotFoundError(error) bool
+	CloseConnection() error
+}
+
 // UserService Business Logic for managing Users
 type UserService struct {
-	databaseHandler repository.DatabaseRepository
+	databaseHandler DatabaseHandler
 }
 
 func NewUserService() UserService {
@@ -23,7 +35,7 @@ func NewUserService() UserService {
 	}
 
 	return UserService{
-		databaseHandler: databaseHandler,
+		databaseHandler: &databaseHandler,
 	}
 }
 
@@ -60,7 +72,7 @@ func (s *UserService) FindUserByEmailOrUserName(userName string) (model.UserDTO,
 	user, err := s.databaseHandler.FindByEmailOrUserName(userName)
 	if err != nil {
 		log.Println(err)
-		if gorm.IsRecordNotFoundError(err) {
+		if s.databaseHandler.IsNotFoundError(err) {
 			return model.UserDTO{}, errors.New("No user found with this username")
 		}
 		return model.UserDTO{}, err
@@ -118,11 +130,11 @@ func (s *UserService) CreateUser(userDTO model.UserDTO) (err error) {
 		return errors.New("could not create password Hash")
 	}
 
-	if _, err := s.databaseHandler.FindByUserName(userDTO.UserName); !gorm.IsRecordNotFoundError(err) {
+	if _, err := s.databaseHandler.FindByUserName(userDTO.UserName); !s.databaseHandler.IsNotFoundError(err) {
 		return errors.New("Username already exists")
 	}
 
-	if _, err := s.databaseHandler.FindByEmail(userDTO.Email); !gorm.IsRecordNotFoundError(err) {
+	if _, err := s.databaseHandler.FindByEmail(userDTO.Email); !s.databaseHandler.IsNotFoundError(err) {
 		return errors.New("Email already exists")
 	}
 
@@ -151,7 +163,7 @@ func (s *UserService) UpdateUser(userID uint, userDTO model.UserDTO) error {
 		return errors.New("username cannot be deleted")
 	}
 	if userDTO.UserName != "" && userDTO.UserName != user.UserName {
-		if _, err := s.databaseHandler.FindByUserName(userDTO.UserName); !gorm.IsRecordNotFoundError(err) {
+		if _, err := s.databaseHandler.FindByUserName(userDTO.UserName); !s.databaseHandler.IsNotFoundError(err) {
 			return errors.New("Username cannot be changed as there is already a user with this username")
 		} else {
 			user.UserName = userDTO.UserName
@@ -161,7 +173,7 @@ func (s *UserService) UpdateUser(userID uint, userDTO model.UserDTO) error {
 		return errors.New("Email cannot be deleted")
 	}
 	if userDTO.Email != "" && userDTO.Email != user.Email {
-		if _, err := s.databaseHandler.FindByEmail(userDTO.Email); !gorm.IsRecordNotFoundError(err) {
+		if _, err := s.databaseHandler.FindByEmail(userDTO.Email); !s.databaseHandler.IsNotFoundError(err) {
 			return errors.New("Email cannot be changed as there is alreay a user with this e-mail")
 		} else {
 			user.Email = userDTO.Email

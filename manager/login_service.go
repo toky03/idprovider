@@ -6,15 +6,24 @@ import (
 	"user-service/model"
 )
 
+type LoginAdapter interface {
+	ReadChallenge(string, string) (model.LoginChallenge, error)
+	SendRejectBody(string, string, []byte) (string, error)
+	SendAcceptBody(string, string, []byte) (string, error)
+}
+
 type LoginService struct {
 	UserService  UserService
-	HydraAdapter adapter.HydraAdapter
+	HydraAdapter LoginAdapter
 }
 
 func NewLoginService() LoginService {
+
+	loginAdapter := adapter.NewHydraAdapter()
+
 	return LoginService{
 		UserService:  NewUserService(),
-		HydraAdapter: adapter.NewHydraAdapter(),
+		HydraAdapter: &loginAdapter,
 	}
 }
 

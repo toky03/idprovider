@@ -117,16 +117,10 @@ func (repository *DatabaseRepository) FindUsersFromApplication(applicationName s
 
 }
 
-func (repository *DatabaseRepository) CloseConnection() {
-	repository.connection.Close()
+func (repository *DatabaseRepository) IsNotFoundError(err error) bool {
+	return gorm.IsRecordNotFoundError(err)
 }
 
-type DatabaseHandler interface {
-	FindUserName(string) (model.User, error)
-	FindById(string) (model.User, error)
-	FindByEmail(string) (model.User, error)
-	FindAllUsers() ([]model.User, error)
-	CreateUser(model.UserDTO) (err error)
-	CheckPassword(string, string) (bool, error)
-	CloseConnection()
+func (repository *DatabaseRepository) CloseConnection() error {
+	return repository.connection.Close().Error()
 }
