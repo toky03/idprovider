@@ -121,6 +121,6 @@ func (repository *DatabaseRepository) IsNotFoundError(err error) bool {
 	return gorm.IsRecordNotFoundError(err)
 }
 
-func (repository *DatabaseRepository) CloseConnection() error {
-	return repository.connection.Close().Error()
+func (repository *DatabaseRepository) CloseConnection() {
+	repository.connection.Close()
 }

@@ -19,7 +19,7 @@ type DatabaseHandler interface {
 	FindByEmailOrUserName(string) (model.User, error)
 	FindUsersFromApplication(string) ([]model.User, error)
 	IsNotFoundError(error) bool
-	CloseConnection() error
+	CloseConnection()
 }
 
 // UserService Business Logic for managing Users

@@ -13,7 +13,7 @@ services:
     depends_on: 
       - hydra
       - id-database
-    image: toky03/idserver:0.1
+    build: .
     ports:
       - "3000:3000"
     environment: 

@@ -13,8 +13,12 @@ Identity Service to work with [ory Hydra](https://github.com/ory/hydra) OAuth se
 ## Start the complete service with a postgres database and a hydra service
 `docker-compose up`
 
-## Creating a new User
+# Play the whole Flow
+Complete Frlow from [Ory Hydra 5 Minute Tutorial](https://www.ory.sh/hydra/docs/5min-tutorial/)
 
+`docker-compose up --build`
+
+Create a new User:
 POST 127.0.0.1:3000/user
 ````json
 {
@@ -36,4 +40,27 @@ POST 127.0.0.1:3000/user
 
 ````
 
-More should follow soon
+Create a client in Hydra:
+````yaml
+docker-compose exec hydra \
+    hydra clients create \
+    --endpoint http://127.0.0.1:4445 \
+    --id auth-code-client \
+    --secret secret \
+    --grant-types authorization_code,refresh_token \
+    --response-types code,id_token \
+    --scope openid,offline \
+    --callbacks http://127.0.0.1:5555/callback
+````
+
+Create a sample App from Hydra:
+````yaml
+docker-compose exec hydra \
+    hydra token user \
+    --client-id auth-code-client \
+    --client-secret secret \
+    --endpoint http://127.0.0.1:4444/ \
+    --port 5555 \
+    --scope openid,offline
+````
+Navigate to http://127.0.0.1:5555/ and login with user-name and pwd.
