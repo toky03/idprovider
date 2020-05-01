@@ -13,6 +13,10 @@ Identity Service to work with [ory Hydra](https://github.com/ory/hydra) OAuth se
 ## Start the complete service with a postgres database and a hydra service
 `docker-compose up`
 
+## Unit test the Application
+Example for adapter package:
+`go test --coverprofile cover.out ./adapter && go tool cover -html=cover.out`
+
 # Play the whole Flow
 Complete Frlow from [Ory Hydra 5 Minute Tutorial](https://www.ory.sh/hydra/docs/5min-tutorial/)
 

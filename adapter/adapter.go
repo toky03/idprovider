@@ -30,7 +30,7 @@ func NewHydraAdapter() HydraAdapter {
 // ReadChallenge fetch data from Challgnge
 func (a *HydraAdapter) ReadChallenge(loginChallenge, challengeMethod string) (challengeBody model.LoginChallenge, err error) {
 	headers := map[string][]string{
-		"Accept": []string{"application/json"},
+		"Accept": {"application/json"},
 	}
 
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/oauth2/auth/requests/%s?%s_challenge=%s", a.hydraEndpoint, challengeMethod, challengeMethod, loginChallenge), nil)
@@ -70,8 +70,8 @@ func (a *HydraAdapter) SendRejectBody(method, challenge string, rawJson []byte) 
 // SendAcceptBody used to accept requests
 func (a *HydraAdapter) SendAcceptBody(method, challenge string, rawJson []byte) (redirectUrl string, err error) {
 	headers := map[string][]string{
-		"Accept":       []string{"application/json"},
-		"Content-Type": []string{"application/json"},
+		"Accept":       {"application/json"},
+		"Content-Type": {"application/json"},
 	}
 
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/oauth2/auth/requests/%s/accept?%s_challenge=%s", a.hydraEndpoint, method, method, challenge), bytes.NewBuffer(rawJson))
